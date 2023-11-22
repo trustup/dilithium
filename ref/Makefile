@@ -1,5 +1,5 @@
 CC ?= /usr/bin/cc
-CFLAGS += -Wall -Wextra -Wpedantic -Wmissing-prototypes -Wredundant-decls \
+CFLAGS += -nostdlib -Wall -Wextra -Wpedantic -Wmissing-prototypes -Wredundant-decls \
   -Wshadow -Wvla -Wpointer-arith -O3 -fomit-frame-pointer
 NISTFLAGS += -Wno-unused-result -O3 -fomit-frame-pointer
 SOURCES = sign.c packing.c polyvec.c poly.c ntt.c reduce.c rounding.c
@@ -50,6 +50,42 @@ shared: \
   libpqcrystals_dilithium5aes_ref.so \
   libpqcrystals_fips202_ref.so \
   libpqcrystals_aes256ctr_ref.so
+
+static: \
+  libpqcrystals_dilithium5_ref.ale \
+  libpqcrystals_dilithium5aes_ref.ale \
+  libpqcrystals_fips202_ref.ale \
+  libpqcrystals_aes256ctr_ref.ale \
+  libdilithium.a
+
+libpqcrystals_dilithium5_ref.ale: $(SOURCES) $(HEADERS) symmetric-shake.c
+		/opt/wasi-sdk/bin/clang++ -c -isysroot/ \
+		--target=wasm32-wasi \
+		--sysroot=/opt/wasi-sdk/share/wasi-sysroot/ \
+		-DDILITHIUM_MODE=5 \
+	  	$(SOURCES) symmetric-shake.c
+
+libpqcrystals_dilithium5aes_ref.ale: $(SOURCES) $(HEADERS)
+		/opt/wasi-sdk/bin/clang++ -c -isysroot/ \
+		--target=wasm32-wasi \
+		--sysroot=/opt/wasi-sdk/share/wasi-sysroot/ \
+		-DDILITHIUM_MODE=5 -DDILITHIUM_USE_AES \
+		$(SOURCES) symmetric-aes.c
+
+libpqcrystals_fips202_ref.ale: fips202.c fips202.h
+		/opt/wasi-sdk/bin/clang++ -c -isysroot/ \
+		--target=wasm32-wasi \
+		--sysroot=/opt/wasi-sdk/share/wasi-sysroot/ \
+		fips202.c
+
+libpqcrystals_aes256ctr_ref.ale: aes256ctr.c aes256ctr.h
+		/opt/wasi-sdk/bin/clang++ -c -isysroot/ \
+		--target=wasm32-wasi \
+		--sysroot=/opt/wasi-sdk/share/wasi-sysroot/ \
+		aes256ctr.c
+
+libdilithium.a:
+	/opt/wasi-sdk/bin/llvm-ar rcs /usr/src/app/dsn-tutorial/step-8/crystals-porting/include/libdilithium.a *.o
 
 libpqcrystals_fips202_ref.so: fips202.c fips202.h
 	$(CC) -shared -fPIC $(CFLAGS) -o $@ $<
@@ -213,7 +249,7 @@ PQCgenKAT_sign5aes: PQCgenKAT_sign.c rng.c rng.h $(AES_SOURCES) \
 	  -o $@ $< rng.c $(AES_SOURCES) $(LDFLAGS) -lcrypto
 
 clean:
-	rm -f *~ test/*~ *.gcno *.gcda *.lcov
+	rm -f *~ test/*~ *.gcno *.gcda *.lcov *.o
 	rm -f libpqcrystals_dilithium2_ref.so
 	rm -f libpqcrystals_dilithium3_ref.so
 	rm -f libpqcrystals_dilithium5_ref.so
@@ -247,3 +283,4 @@ clean:
 	rm -f PQCgenKAT_sign2aes
 	rm -f PQCgenKAT_sign3aes
 	rm -f PQCgenKAT_sign5aes
+	rm -f libdilithium.a

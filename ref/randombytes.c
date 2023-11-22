@@ -53,6 +53,26 @@ void randombytes(uint8_t *out, size_t outlen) {
     outlen -= ret;
   }
 }
+#elif defined(__wasi__)
+void randombytes(uint8_t *out, size_t outlen) {
+
+  if (outlen == 0) return;
+
+  uint8_t* temp = malloc(outlen);
+  if (temp == NULL) return; // Handle malloc failure
+
+  memcpy(temp, out, outlen);
+  arc4random_buf(out, outlen);
+
+  int ret;
+  ret = memcmp (out, temp, outlen);
+  free(temp);
+  if(ret == 0)
+    continue;
+  else
+    abort();
+    
+}
 #else
 void randombytes(uint8_t *out, size_t outlen) {
   static int fd = -1;

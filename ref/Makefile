@@ -9,7 +9,7 @@ KECCAK_SOURCES = $(SOURCES) fips202.c symmetric-shake.c
 KECCAK_HEADERS = $(HEADERS) fips202.h
 AES_SOURCES = $(SOURCES) fips202.c aes256ctr.c symmetric-aes.c
 AES_HEADERS = $(HEADERS) fips202.h aes256ctr.h
-STATIC_BUILD_FOLDER?=.
+STATIC_BUILD_FOLDER?=./
 
 .PHONY: all speed shared clean
 
@@ -86,7 +86,7 @@ libpqcrystals_aes256ctr_ref.o: aes256ctr.c aes256ctr.h
 		aes256ctr.c
 
 libdilithium.a:
-	/opt/wasi-sdk/bin/llvm-ar rcs $(STATIC_BUILD_FOLDER)/libdilithium.a *.o
+	/opt/wasi-sdk/bin/llvm-ar rcs $(STATIC_BUILD_FOLDER)libdilithium.a *.o
 
 libpqcrystals_fips202_ref.so: fips202.c fips202.h
 	$(CC) -shared -fPIC $(CFLAGS) -o $@ $<

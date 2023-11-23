@@ -9,6 +9,7 @@ KECCAK_SOURCES = $(SOURCES) fips202.c symmetric-shake.c
 KECCAK_HEADERS = $(HEADERS) fips202.h
 AES_SOURCES = $(SOURCES) fips202.c aes256ctr.c symmetric-aes.c
 AES_HEADERS = $(HEADERS) fips202.h aes256ctr.h
+STATIC_BUILD_FOLDER?=.
 
 .PHONY: all speed shared clean
 
@@ -52,40 +53,40 @@ shared: \
   libpqcrystals_aes256ctr_ref.so
 
 static: \
-  libpqcrystals_dilithium5_ref.ale \
-  libpqcrystals_dilithium5aes_ref.ale \
-  libpqcrystals_fips202_ref.ale \
-  libpqcrystals_aes256ctr_ref.ale \
+  libpqcrystals_dilithium5_ref.o \
+  libpqcrystals_dilithium5aes_ref.o \
+  libpqcrystals_fips202_ref.o \
+  libpqcrystals_aes256ctr_ref.o \
   libdilithium.a
 
-libpqcrystals_dilithium5_ref.ale: $(SOURCES) $(HEADERS) symmetric-shake.c
+libpqcrystals_dilithium5_ref.o: $(SOURCES) $(HEADERS) symmetric-shake.c
 		/opt/wasi-sdk/bin/clang++ -c -isysroot/ \
 		--target=wasm32-wasi \
 		--sysroot=/opt/wasi-sdk/share/wasi-sysroot/ \
 		-DDILITHIUM_MODE=5 \
 	  	$(SOURCES) symmetric-shake.c
 
-libpqcrystals_dilithium5aes_ref.ale: $(SOURCES) $(HEADERS)
+libpqcrystals_dilithium5aes_ref.o: $(SOURCES) $(HEADERS)
 		/opt/wasi-sdk/bin/clang++ -c -isysroot/ \
 		--target=wasm32-wasi \
 		--sysroot=/opt/wasi-sdk/share/wasi-sysroot/ \
 		-DDILITHIUM_MODE=5 -DDILITHIUM_USE_AES \
 		$(SOURCES) symmetric-aes.c
 
-libpqcrystals_fips202_ref.ale: fips202.c fips202.h
+libpqcrystals_fips202_ref.o: fips202.c fips202.h
 		/opt/wasi-sdk/bin/clang++ -c -isysroot/ \
 		--target=wasm32-wasi \
 		--sysroot=/opt/wasi-sdk/share/wasi-sysroot/ \
 		fips202.c
 
-libpqcrystals_aes256ctr_ref.ale: aes256ctr.c aes256ctr.h
+libpqcrystals_aes256ctr_ref.o: aes256ctr.c aes256ctr.h
 		/opt/wasi-sdk/bin/clang++ -c -isysroot/ \
 		--target=wasm32-wasi \
 		--sysroot=/opt/wasi-sdk/share/wasi-sysroot/ \
 		aes256ctr.c
 
 libdilithium.a:
-	/opt/wasi-sdk/bin/llvm-ar rcs /usr/src/app/dsn-tutorial/step-8/crystals-porting/include/libdilithium.a *.o
+	/opt/wasi-sdk/bin/llvm-ar rcs $(STATIC_BUILD_FOLDER)/libdilithium.a *.o
 
 libpqcrystals_fips202_ref.so: fips202.c fips202.h
 	$(CC) -shared -fPIC $(CFLAGS) -o $@ $<
